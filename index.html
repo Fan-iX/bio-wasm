@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bio WASM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        kbd {
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+            color: #333;
+            font-size: smaller;
+            padding: 2px 4px;
+            white-space: nowrap;
+        }
+
+        pre {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow: auto;
+        }
+
+        input[type=text].argument {
+            min-width: 1ch;
+        }
+
+        table textarea {
+            resize: vertical;
+        }
+
+        .flex {
+            display: flex;
+        }
+
+        .flex-row {
+            flex-direction: row;
+        }
+
+        .contents {
+            display: contents;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .font-mono {
+            font-family: monospace;
+        }
+
+        .field-sizing-content {
+            field-sizing: content;
+        }
+
+        .w-full {
+            width: 100%;
+        }
+
+        .items-start {
+            align-items: start;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        #input-table,
+        #output-table {
+            caption {
+                font-size: larger;
+            }
+
+            input[type=text] {
+                width: 200px;
+                box-sizing: border-box;
+            }
+
+            textarea {
+                width: 100%;
+                height: 4lh;
+                box-sizing: border-box;
+            }
+
+            input[type=file] {
+                width: 100px;
+
+                &::file-selector-button {
+                    display: none;
+                }
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Bio WASM</h1>
+    <p>
+        Bioinformatics tools compiled to WebAssembly (WASM) can be run directly in web browser.
+    </p>
+    <p>
+        This page provides a simple interface to run various bioinformatics command-line tools without needing to
+        install them on your local machine.
+    </p>
+    <p>
+        Press <button>+</button> buttons below to add command arguments, input files, or output files.
+    </p>
+    <h3>command line</h3>
+    <p class="flex flex-row gap-2">
+        <select id="command" class="field-sizing-content"></select>
+        <span id="arguments" class="contents"></span>
+        <button id="addArgumentButton" onclick="addArgument()" title="Add a command argument">+</button>
+        <button id="runButton">run</button>
+    </p>
+    <p>
+        Note that spaces in the argument input will be kept <strong>as is</strong>.
+        You can press <kbd>Enter</kbd> to create a new argument input
+        and press <kbd>Backspace</kbd> on an empty argument input to remove it.
+    </p>
+    <div class="flex gap-4 items-start">
+        <table id="input-table" class="w-full">
+            <caption><strong>input files</strong></caption>
+            <thead>
+                <tr>
+                    <th>Enabled</th>
+                    <th>Path</th>
+                    <th style="width: 100%;">Content</th>
+                    <th>Upload</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">
+                        <input type="checkbox" checked disabled title="leave blank to disable standard input">
+                    </td>
+                    <td title="standard input"><input type="text" class="font-mono path" value="$stdin" disabled></td>
+                    <td><textarea name="" id=""></textarea></td>
+                    <td><input type="file" name="" id=""></td>
+                </tr>
+            </tbody>
+            <tbody id="input-table-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="5" class="text-center">
+                        <button onclick="addInputRow()" title="add an input file">+</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+        <table id="output-table" class="w-full">
+            <caption><strong>output</strong></caption>
+            <thead>
+                <tr>
+                    <th>Path</th>
+                    <th style="width: 100%;">Content</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="font-mono path" value="$stdout" title="standard output" disabled></td>
+                    <td><textarea name="" id=""></textarea></td>
+                </tr>
+                <tr>
+                    <td><input type="text" class="font-mono path" value="$stderr" title="standard error" disabled></td>
+                    <td><textarea name="" id=""></textarea></td>
+                </tr>
+            </tbody>
+            <tbody id="output-table-body"></tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-center">
+                        <button onclick="addOutputRow()" title="add an output file to inspect">+</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <script>
+        function createElement(tagName, property = {}) {
+            let ele = document.createElement(tagName);
+            for (let attribute in property) {
+                if (attribute == "style") {
+                    for (let key in property.style) {
+                        ele.style[key] = property.style[key]
+                    }
+                } else if (attribute == "children") {
+                    ele.replaceChildren(...property.children)
+                } else {
+                    if (attribute) ele[attribute] = property[attribute]
+                }
+            }
+            return ele
+        }
+    </script>
+    <script>
+        async function getUint8Array(x) {
+            if (x == null) return new Uint8Array(0)
+            if (x instanceof Blob) return new Uint8Array(await x.arrayBuffer())
+            if (typeof x === "string") return new TextEncoder().encode(x)
+            return new Uint8Array(x)
+        }
+        async function runWasm(wasmModule, { args = [], FS = {}, retFiles = [] } = {}) {
+            let stdout = [], stderr = [], stdin = [], _i = 0
+            if (FS.$stdin) {
+                stdin = await getUint8Array(FS.$stdin)
+                delete FS.$stdin
+            }
+            var wasm = await wasmModule({
+                noInitialRun: true,
+                stdin: () => stdin[_i++],
+                stdout: (v) => stdout.push(v),
+                stderr: (v) => stderr.push(v),
+            })
+            for (let [path, file] of Object.entries(FS)) {
+                if (path.startsWith("$")) continue
+                let dir = path.replace(/[^\/]*$/, '')
+                wasm.FS.mkdirTree(dir)
+                let name = path.replace(/^.*\//, '')
+                if (name == "") continue
+                wasm.FS.createDataFile(dir, name, await getUint8Array(file), true, true)
+            }
+            await wasm.callMain(args)
+            let result = {
+                $stdout: new Blob([new Uint8Array(stdout)]),
+                $stderr: new Blob([new Uint8Array(stderr)])
+            }
+            for (let path of retFiles) {
+                try {
+                    result[path] = new Blob([wasm.FS.readFile(path)])
+                } catch (e) { }
+            }
+            return result
+        }
+    </script>
+    <script>
+        const commandRef = document.querySelector("#command")
+        const argumentsRef = document.querySelector("#arguments")
+        const inputTableRef = document.querySelector("#input-table")
+        const inputTableBodyRef = document.querySelector("#input-table-body")
+        const outputTableRef = document.querySelector("#output-table")
+        const outputTableBodyRef = document.querySelector("#output-table-body")
+    </script>
+    <script>
+        function setArguments(cmd) {
+            argumentsRef.replaceChildren()
+            for (let v of savedArgs[cmd] ?? []) {
+                addArgument(v)
+            }
+        }
+        commandRef.onchange = (e) => {
+            let cmd = e.currentTarget.value
+            localStorage.setItem("lastCommand", cmd)
+            setArguments(cmd)
+        }
+        let savedArgs = JSON.parse(localStorage.getItem("savedArgs") || '{}')
+    </script>
+    <script type="module" defer>
+        import * as modules from "./wasm.js";
+
+        let args = document.querySelector("#arguments")
+        commandRef.replaceChildren(...Object.keys(modules).map(name => {
+            let option = document.createElement("option")
+            option.value = name
+            option.textContent = name
+            return option
+        }))
+        commandRef.value = localStorage.getItem("lastCommand") ?? commandRef.value
+        setArguments(commandRef.value)
+
+        document.querySelector("#runButton").onclick = async () => {
+            let args = Array.from(document.querySelectorAll("#arguments .argument")).map(x => x.value)
+            let FS = {}
+            for (let tr of inputTableRef.querySelectorAll("tbody tr")) {
+                let enable = tr.querySelector("input[type=checkbox]")?.checked ?? true
+                let path = tr.querySelector(".path").value
+                if (!enable || !path) continue
+                let fileInput = tr.querySelector("input[type=file]")
+                if (fileInput.files.length > 0) {
+                    FS[path] = fileInput.files[0]
+                } else {
+                    FS[path] = tr.querySelector("textarea").value
+                }
+            }
+            let retFiles = Array.from(outputTableBodyRef.querySelectorAll("tr .path")).map(x => x.value)
+            let output = await runWasm(modules[commandRef.value], { args, FS, retFiles })
+            for (let tr of outputTableRef.querySelectorAll("tbody tr")) {
+                let path = tr.querySelector(".path").value
+                tr.querySelector("textarea").value = await output[path]?.text?.() || ""
+            }
+        }
+    </script>
+    <script>
+        function saveArguments() {
+            savedArgs[commandRef.value] = Array.from(argumentsRef.querySelectorAll(".argument")).map(x => x.value)
+            localStorage.setItem("savedArgs", JSON.stringify(savedArgs))
+        }
+        function inputKeydown(e) {
+            let ele = e.currentTarget
+            if (e.key == "Backspace" && ele.value == "") {
+                e.preventDefault()
+                let sibling = ele.previousElementSibling ?? ele.nextElementSibling
+                sibling?.focus?.()
+                ele.remove()
+                saveArguments()
+            }
+            if (e.key === "Enter") {
+                addArgument()
+            }
+        }
+        function addArgument(value) {
+            let input = createElement("input", {
+                type: "text",
+                value: value || "",
+                className: "font-mono argument field-sizing-content",
+                onkeydown: inputKeydown,
+                onchange: saveArguments
+            })
+            document.querySelector("#arguments").appendChild(input)
+            input.focus()
+            saveArguments()
+            return input
+        }
+        function saveInputFiles() {
+            localStorage.setItem("inputFiles", JSON.stringify(
+                Array.from(inputTableBodyRef.querySelectorAll("tr")).map(tr => {
+                    let path = tr.querySelector(".path").value
+                    let content = tr.querySelector("textarea").value
+                    let enabled = tr.querySelector("input[type=checkbox]").checked
+                    return { path, content, enabled }
+                })
+            ))
+        }
+        function addInputRow({ path, content, enabled = true } = {}) {
+            let tr = document.createElement("tr")
+            tr.replaceChildren(
+                createElement("td", {
+                    className: "text-center",
+                    children: [createElement("input", {
+                        type: "checkbox",
+                        title: "disable/enable this file",
+                        checked: enabled,
+                        onchange: (e) => saveInputFiles()
+                    })]
+                }),
+                createElement("td", {
+                    children: [createElement("input", {
+                        type: "text",
+                        className: "font-mono path",
+                        placeholder: "/path/to/file",
+                        value: path || "",
+                        onchange: (e) => saveInputFiles()
+                    })]
+                }),
+                createElement("td", {
+                    children: [createElement("textarea", {
+                        value: content || "",
+                        onchange: (e) => saveInputFiles()
+                    })]
+                }),
+                createElement("td", { children: [createElement("input", { type: "file" })] }),
+                createElement("td", {
+                    className: "text-center",
+                    children: [createElement("button", {
+                        innerText: "×",
+                        title: "remove this file",
+                        onclick: (e) => {
+                            tr.remove()
+                            saveInputFiles()
+                        }
+                    })]
+                })
+            )
+            inputTableBodyRef.append(tr)
+        }
+        function saveOutputFiles() {
+            localStorage.setItem("outputFiles", JSON.stringify(
+                Array.from(outputTableBodyRef.querySelectorAll("tr")).map(tr => tr.querySelector(".path").value)
+            ))
+        }
+        function addOutputRow(path) {
+            let tr = document.createElement("tr")
+            tr.replaceChildren(
+                createElement("td", {
+                    children: [createElement("input", {
+                        type: "text",
+                        className: "font-mono path",
+                        placeholder: "/path/to/file",
+                        value: path || "",
+                        onchange: saveOutputFiles
+                    })]
+                }),
+                createElement("td", { children: [createElement("textarea")] }),
+                createElement("td", {
+                    className: "text-center",
+                    children: [createElement("button", {
+                        innerText: "×",
+                        onclick: (e) => {
+                            tr.remove()
+                            saveOutputFiles()
+                        }
+                    })]
+                })
+            )
+            outputTableBodyRef.appendChild(tr)
+            saveOutputFiles()
+        }
+    </script>
+    <script>
+        JSON.parse(localStorage.getItem("inputFiles") || "[]").forEach(addInputRow)
+        JSON.parse(localStorage.getItem("outputFiles") || "[]").forEach(addOutputRow)
+    </script>
+</body>
+
+</html>
