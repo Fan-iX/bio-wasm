@@ -1,0 +1,33 @@
+name: Build
+description: Build kalign
+runs:
+  using: "composite"
+  steps:
+    - name: Install Compiler
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y emscripten cmake
+
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/timolassmann/kalign
+
+    - name: Configure
+      shell: bash
+      working-directory: kalign
+      run: cmake -DCMAKE_TOOLCHAIN_FILE=/usr/share/emscripten/cmake/Modules/Platform/Emscripten.cmake
+                  -DCMAKE_EXE_LINKER_FLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS='[\"callMain\",\"FS\"]'" .
+
+    - name: Build
+      shell: bash
+      working-directory: kalign
+      run: make kalign-bin
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/kalign
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp kalign/src/kalign.js kalign/src/kalign.wasm -t dist/wasm/kalign/

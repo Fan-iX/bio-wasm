@@ -17,6 +17,9 @@ jobs:
       - name: Copy static files
         run: cp -r ./pages ./dist
 
+      - name: Build kalign
+        uses: ./.github/actions/build-kalign
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js
