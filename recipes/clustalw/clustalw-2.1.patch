@@ -1,0 +1,10 @@
+--- src/general/VectorOutOfRange.h
++++ src/general/VectorOutOfRange.h
+@@ -5,6 +5,7 @@
+  */
+ #include <stdexcept>
+ #include <exception>
++#include <string>
+ namespace clustalw
+ {
+ 

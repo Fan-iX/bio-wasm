@@ -20,6 +20,9 @@ jobs:
       - name: Build kalign
         uses: ./.github/actions/build-kalign
 
+      - name: Build clustalw
+        uses: ./.github/actions/build-clustalw
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js

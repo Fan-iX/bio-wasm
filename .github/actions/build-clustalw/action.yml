@@ -1,0 +1,41 @@
+name: Build
+description: Build clustalw
+runs:
+  using: "composite"
+  steps:
+    - name: Setup emscripten
+      uses: mymindstorm/setup-emsdk@v12
+      with:
+        version: 'latest'
+
+    - name: Clone
+      shell: bash
+      run: wget http://www.clustal.org/download/current/clustalw-2.1.tar.gz && tar -xvzf clustalw-2.1.tar.gz
+
+    - name: Patch
+      shell: bash
+      working-directory: clustalw-2.1
+      run: patch -p0 < ../recipes/clustalw/clustalw-2.1.patch
+
+    - name: Configure
+      shell: bash
+      working-directory: clustalw-2.1
+      run: emconfigure ./configure CXXFLAGS="-std=c++98" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]" --host none
+
+    - name: Build
+      shell: bash
+      working-directory: clustalw-2.1/src
+      run: make clustalw2
+
+    - name: Rename binary
+      shell: bash
+      working-directory: clustalw-2.1/src
+      run: mv clustalw2 clustalw2.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/clustalw
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp clustalw-2.1/src/clustalw2.js clustalw-2.1/src/clustalw2.wasm -t dist/wasm/clustalw/
