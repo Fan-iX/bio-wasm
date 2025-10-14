@@ -3,11 +3,6 @@ description: Build raxml
 runs:
   using: "composite"
   steps:
-    - name: Setup emscripten
-      uses: mymindstorm/setup-emsdk@v12
-      with:
-        version: 'latest'
-
     - name: Clone
       shell: bash
       run: git clone https://github.com/stamatak/standard-RAxML

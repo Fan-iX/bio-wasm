@@ -17,6 +17,12 @@ jobs:
       - name: Copy static files
         run: cp -r ./pages ./dist
 
+      - name: Setup emscripten
+        uses: mymindstorm/setup-emsdk@v12
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+
       - name: Build kalign
         uses: ./.github/actions/build-kalign
 

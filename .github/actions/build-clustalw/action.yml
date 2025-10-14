@@ -3,11 +3,6 @@ description: Build clustalw
 runs:
   using: "composite"
   steps:
-    - name: Setup emscripten
-      uses: mymindstorm/setup-emsdk@v12
-      with:
-        version: 'latest'
-
     - name: Clone
       shell: bash
       run: wget http://www.clustal.org/download/current/clustalw-2.1.tar.gz && tar -xvzf clustalw-2.1.tar.gz
