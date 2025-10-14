@@ -27,7 +27,7 @@ runs:
       working-directory: clustalw-2.1/src
       run: make clustalw2
 
-    - name: Rename binary
+    - name: Rename
       shell: bash
       working-directory: clustalw-2.1/src
       run: mv clustalw2 clustalw2.js

@@ -1,0 +1,36 @@
+name: Build
+description: Build raxml
+runs:
+  using: "composite"
+  steps:
+    - name: Setup emscripten
+      uses: mymindstorm/setup-emsdk@v12
+      with:
+        version: 'latest'
+
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/stamatak/standard-RAxML
+
+    - name: Patch
+      shell: bash
+      working-directory: standard-RAxML
+      run: patch -p0 < ../recipes/raxml/standard-RAxML-8.2.13.patch
+
+    - name: Build
+      shell: bash
+      working-directory: standard-RAxML
+      run: make -f Makefile.gcc ARCH=aarch64 CC=emcc LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]"
+
+    - name: Rename
+      shell: bash
+      working-directory: standard-RAxML
+      run: mv raxmlHPC raxmlHPC.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/raxml
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp standard-RAxML/raxmlHPC.js standard-RAxML/raxmlHPC.wasm -t dist/wasm/raxml/
