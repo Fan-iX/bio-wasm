@@ -38,6 +38,9 @@ jobs:
       - name: Build aster
         uses: ./.github/actions/build-aster
 
+      - name: Build seqtk
+        uses: ./.github/actions/build-seqtk
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js

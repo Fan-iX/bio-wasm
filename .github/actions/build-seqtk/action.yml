@@ -1,0 +1,26 @@
+name: Build
+description: Build seqtk
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/lh3/seqtk
+
+    - name: Build
+      shell: bash
+      working-directory: seqtk
+      run: make CC=emcc CFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s USE_ZLIB=1 -O3"
+
+    - name: Rename
+      shell: bash
+      working-directory: seqtk
+      run: mv seqtk seqtk.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/seqtk
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp seqtk/seqtk.js seqtk/seqtk.wasm -t dist/wasm/seqtk/
