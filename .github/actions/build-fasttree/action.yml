@@ -1,0 +1,21 @@
+name: Build
+description: Build clustalw
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/morgannprice/fasttree
+
+    - name: Build
+      shell: bash
+      working-directory: fasttree
+      run: emcc -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -O3 -o FastTree.js FastTree.c -lm
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/fasttree
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp fasttree/FastTree.js fasttree/FastTree.wasm -t dist/wasm/fasttree/
