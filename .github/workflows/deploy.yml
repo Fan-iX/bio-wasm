@@ -35,6 +35,9 @@ jobs:
       - name: Build fasttree
         uses: ./.github/actions/build-fasttree
 
+      - name: Build aster
+        uses: ./.github/actions/build-aster
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js

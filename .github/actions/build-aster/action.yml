@@ -1,0 +1,26 @@
+name: Build
+description: Build aster
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/chaoszhang/ASTER
+
+    - name: Patch
+      shell: bash
+      working-directory: ASTER
+      run: patch -p0 < ../recipes/aster/ASTER-1.23.patch
+
+    - name: Build
+      shell: bash
+      working-directory: ASTER
+      run: make -f Makefile.emcc
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/aster
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp ASTER/bin/*.js ASTER/bin/*.wasm -t dist/wasm/aster/

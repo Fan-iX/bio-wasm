@@ -1,0 +1,43 @@
+--- Makefile.emcc
++++ Makefile.emcc
+@@ -0,0 +1,40 @@
++all: dir astral astral-pro wastral caster-site caster-site_branchlength caster-pair waster waster_branchlength dstar
++	echo "*** Installation complete! ***"
++
++CXX=em++
++CXXFLAGS=-std=c++17
++LDFLAGS=-s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORTED_RUNTIME_METHODS='["callMain","FS"]' -O3
++EXEEXT=.js
++
++astral: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++astral-pro: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++wastral: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/astral-hybrid.cpp -o bin/wastral$(EXEEXT)
++
++caster-site: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++caster-site_branchlength: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) -D CUSTOMIZED_ANNOTATION_TERMINAL_LENGTH src/caster-site.cpp -o bin/$@$(EXEEXT)
++
++caster-pair: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++waster_branchlength: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) -D CUSTOMIZED_ANNOTATION_TERMINAL_LENGTH src/waster.cpp -o bin/$@$(EXEEXT)
++
++waster: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++dstar: dir
++	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
++
++dir:
++	mkdir -p bin/
++
++clean:
++	rm bin/*
