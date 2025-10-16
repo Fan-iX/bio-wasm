@@ -7,6 +7,7 @@ export { default as 'aster/dstar' } from './wasm/aster/dstar.js';
 export { default as 'aster/waster' } from './wasm/aster/waster.js';
 export { default as 'aster/waster_branchlength' } from './wasm/aster/waster_branchlength.js';
 export { default as 'aster/wastral' } from './wasm/aster/wastral.js';
+export { default as 'bedtools/bedtools' } from './wasm/bedtools/bedtools.js';
 export { default as 'clustalw/clustalw2' } from './wasm/clustalw/clustalw2.js';
 export { default as 'fasttree/FastTree' } from './wasm/fasttree/FastTree.js';
 export { default as 'kalign/kalign' } from './wasm/kalign/kalign.js';
