@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Clone
       shell: bash
-      run: git clone https://github.com/timolassmann/kalign
+      run: git clone --depth 1 https://github.com/timolassmann/kalign
 
     - name: Configure
       shell: bash

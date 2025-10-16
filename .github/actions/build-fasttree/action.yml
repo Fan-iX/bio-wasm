@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Clone
       shell: bash
-      run: git clone https://github.com/morgannprice/fasttree
+      run: git clone --depth 1 https://github.com/morgannprice/fasttree
 
     - name: Build
       shell: bash
