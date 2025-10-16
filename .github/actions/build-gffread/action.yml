@@ -1,0 +1,28 @@
+name: Build
+description: Build gffread
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: |
+        git clone --depth 1 https://github.com/gpertea/gffread
+        git clone --depth 1 https://github.com/gpertea/gclib
+
+    - name: Build
+      shell: bash
+      working-directory: gffread
+      run: make CC=em++ CXX=em++ LINKER=em++ LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]" release
+
+    - name: Rename
+      shell: bash
+      working-directory: gffread
+      run: mv gffread gffread.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/gffread
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp gffread/gffread.js gffread/gffread.wasm -t dist/wasm/gffread/
