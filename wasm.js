@@ -10,6 +10,7 @@ export { default as 'aster/wastral' } from './wasm/aster/wastral.js';
 export { default as 'bedtools/bedtools' } from './wasm/bedtools/bedtools.js';
 export { default as 'clustalw/clustalw2' } from './wasm/clustalw/clustalw2.js';
 export { default as 'fasttree/FastTree' } from './wasm/fasttree/FastTree.js';
+export { default as 'gawk/gawk' } from './wasm/gawk/gawk.js';
 export { default as 'kalign/kalign' } from './wasm/kalign/kalign.js';
 export { default as 'raxml/raxmlHPC' } from './wasm/raxml/raxmlHPC.js';
 export { default as 'seqtk/seqtk' } from './wasm/seqtk/seqtk.js';
