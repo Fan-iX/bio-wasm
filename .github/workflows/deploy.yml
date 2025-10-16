@@ -41,6 +41,9 @@ jobs:
       - name: Build seqtk
         uses: ./.github/actions/build-seqtk
 
+      - name: Build bedtools
+        uses: ./.github/actions/build-bedtools
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js

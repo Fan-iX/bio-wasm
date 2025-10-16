@@ -1,0 +1,31 @@
+name: Build
+description: Build bedtools
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone https://github.com/arq5x/bedtools2
+
+    - name: Patch
+      shell: bash
+      working-directory: bedtools2
+      run: patch -p0 < ../recipes/bedtools/bedtools-2.31.1.patch
+
+    - name: Build
+      shell: bash
+      working-directory: bedtools2
+      run: make CXX="em++ -s USE_ZLIB" CC="emcc -s USE_ZLIB -s USE_BZIP2" BT_LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -O2" bin/bedtools
+
+    - name: Rename
+      shell: bash
+      working-directory: bedtools2
+      run: mv bin/bedtools bin/bedtools.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/bedtools
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp bedtools2/bin/*.js bedtools2/bin/*.wasm -t dist/wasm/bedtools/
