@@ -1,0 +1,26 @@
+name: Build
+description: Build gawk
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone --depth 1 git://git.savannah.gnu.org/gawk.git
+
+    - name: Configure
+      shell: bash
+      working-directory: gawk
+      run: emconfigure ./configure --host none CFLAGS="-O3"
+
+    - name: Build
+      shell: bash
+      working-directory: gawk
+      run: make EXEEXT=.js SUBDIRS="support ." LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]"
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/gawk
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp gawk/gawk.js gawk/gawk.wasm -t dist/wasm/gawk/
