@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Clone
       shell: bash
-      run: git clone --depth 1 git://git.savannah.gnu.org/gawk.git
+      run: git clone --depth 1 https://github.com/sailfishos-mirror/gawk
 
     - name: Configure
       shell: bash
