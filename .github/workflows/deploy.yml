@@ -50,6 +50,9 @@ jobs:
       - name: Build gffread
         uses: ./.github/actions/build-gffread
 
+      - name: Build sed
+        uses: ./.github/actions/build-sed
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js
