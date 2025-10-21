@@ -53,6 +53,9 @@ jobs:
       - name: Build sed
         uses: ./.github/actions/build-sed
 
+      - name: Build quicktree
+        uses: ./.github/actions/build-quicktree
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js

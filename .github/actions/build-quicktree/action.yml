@@ -1,0 +1,26 @@
+name: Build
+description: Build quicktree
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone --depth 1 https://github.com/khowe/quicktree
+
+    - name: Build
+      shell: bash
+      working-directory: quicktree
+      run: make CC=emcc LFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -O3"
+
+    - name: Rename
+      shell: bash
+      working-directory: quicktree
+      run: mv quicktree quicktree.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/quicktree
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp quicktree/quicktree.js quicktree/quicktree.wasm -t dist/wasm/quicktree/
