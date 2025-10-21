@@ -15,17 +15,12 @@ runs:
     - name: Configure
       shell: bash
       working-directory: clustalw-2.1
-      run: emconfigure ./configure CXXFLAGS="-std=c++98" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]" --host none
+      run: emconfigure ./configure --host none CXXFLAGS="-std=c++98 -O0"
 
     - name: Build
       shell: bash
       working-directory: clustalw-2.1/src
-      run: make clustalw2
-
-    - name: Rename
-      shell: bash
-      working-directory: clustalw-2.1/src
-      run: mv clustalw2 clustalw2.js
+      run: make EXEEXT=.js clustalw2.js CXXFLAGS="-std=c++98 -O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]"
 
     - name: Make dist directory
       shell: bash

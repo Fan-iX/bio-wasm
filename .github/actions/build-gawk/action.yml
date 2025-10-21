@@ -10,7 +10,7 @@ runs:
     - name: Configure
       shell: bash
       working-directory: gawk
-      run: emconfigure ./configure --host none CFLAGS="-O3"
+      run: emconfigure ./configure --host none CFLAGS="-O0"
 
     - name: Build support
       shell: bash
