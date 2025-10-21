@@ -308,6 +308,15 @@
             savedArgs[commandRef.value] = Array.from(argumentsRef.querySelectorAll(".argument")).map(x => x.value)
             localStorage.setItem("savedArgs", JSON.stringify(savedArgs))
         }
+        function createArgument(value) {
+            return createElement("input", {
+                type: "text",
+                value: value || "",
+                className: "font-mono argument field-sizing-content",
+                onkeydown: inputKeydown,
+                onchange: saveArguments
+            })
+        }
         function inputKeydown(e) {
             let ele = e.currentTarget
             if (e.key == "Backspace" && ele.value == "") {
@@ -318,17 +327,14 @@
                 saveArguments()
             }
             if (e.key === "Enter") {
-                addArgument()
+                let input = createArgument()
+                ele.after(input)
+                input.focus()
+                saveArguments()
             }
         }
         function addArgument(value) {
-            let input = createElement("input", {
-                type: "text",
-                value: value || "",
-                className: "font-mono argument field-sizing-content",
-                onkeydown: inputKeydown,
-                onchange: saveArguments
-            })
+            let input = createArgument(value)
             document.querySelector("#arguments").appendChild(input)
             input.focus()
             saveArguments()

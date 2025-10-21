@@ -13,6 +13,7 @@ export { default as 'fasttree/FastTree' } from './wasm/fasttree/FastTree.js';
 export { default as 'gawk/gawk' } from './wasm/gawk/gawk.js';
 export { default as 'gffread/gffread' } from './wasm/gffread/gffread.js';
 export { default as 'kalign/kalign' } from './wasm/kalign/kalign.js';
+export { default as 'quicktree/quicktree' } from './wasm/quicktree/quicktree.js';
 export { default as 'raxml/raxmlHPC' } from './wasm/raxml/raxmlHPC.js';
 export { default as 'sed/sed' } from './wasm/sed/sed.js';
 export { default as 'seqtk/seqtk' } from './wasm/seqtk/seqtk.js';
