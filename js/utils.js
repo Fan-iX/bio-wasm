@@ -1,3 +1,10 @@
+async function getUint8Array(x) {
+    if (x == null) return new Uint8Array(0)
+    if (x instanceof Blob) return new Uint8Array(await x.arrayBuffer())
+    if (typeof x === "string") return new TextEncoder().encode(x)
+    return new Uint8Array(x)
+}
+
 /**
  * run an emscripten wasm module with given argument and filesystem entries
  * @param {*} wasmModule the wasm module factory function
