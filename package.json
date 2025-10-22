@@ -1,0 +1,13 @@
+{
+  "name": "bio-wasm",
+  "version": "0.0.1",
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    "./utils": "./js/utils.js",
+    "./wasm": "./js/wasm.js"
+  }
+}
