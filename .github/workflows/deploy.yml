@@ -14,8 +14,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Create dist directory
+        run: mkdir ./dist
+
       - name: Copy static files
-        run: cp -r ./pages ./dist
+        run: cp -r ./package.json ./js -t ./dist/
 
       - name: Setup emscripten
         uses: mymindstorm/setup-emsdk@v12
@@ -58,12 +61,12 @@ jobs:
 
       - name: Build wasm.js
         working-directory: dist/wasm
-        run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from './wasm/\"\$0\".js';\" }" > ../wasm.js
+        run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from '../wasm/\"\$0\".js';\" }" > ../js/wasm.js
 
-      - name: Upload artifact
+      - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: production-files
+          name: bio-wasm
           path: ./dist
 
   deploy:
@@ -75,11 +78,17 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Download artifact
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download bundle
         uses: actions/download-artifact@v4
         with:
-          name: production-files
+          name: bio-wasm
           path: ./dist
+
+      - name: Copy static files
+        run: cp ./demo/index.html -t ./dist/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

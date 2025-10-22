@@ -207,46 +207,6 @@
         }
     </script>
     <script>
-        async function getUint8Array(x) {
-            if (x == null) return new Uint8Array(0)
-            if (x instanceof Blob) return new Uint8Array(await x.arrayBuffer())
-            if (typeof x === "string") return new TextEncoder().encode(x)
-            return new Uint8Array(x)
-        }
-        async function runWasm(wasmModule, { args = [], FS = {}, retFiles = [] } = {}) {
-            let stdout = [], stderr = [], stdin = [], _i = 0
-            if (FS.$stdin) {
-                stdin = await getUint8Array(FS.$stdin)
-                delete FS.$stdin
-            }
-            var wasm = await wasmModule({
-                noInitialRun: true,
-                stdin: () => stdin[_i++],
-                stdout: (v) => stdout.push(v),
-                stderr: (v) => stderr.push(v),
-            })
-            for (let [path, file] of Object.entries(FS)) {
-                if (path.startsWith("$")) continue
-                let dir = path.replace(/[^\/]*$/, '')
-                wasm.FS.mkdirTree(dir)
-                let name = path.replace(/^.*\//, '')
-                if (name == "") continue
-                wasm.FS.createDataFile(dir, name, await getUint8Array(file), true, true)
-            }
-            await wasm.callMain(args)
-            let result = {
-                $stdout: new Blob([new Uint8Array(stdout)]),
-                $stderr: new Blob([new Uint8Array(stderr)])
-            }
-            for (let path of retFiles) {
-                try {
-                    result[path] = new Blob([wasm.FS.readFile(path)])
-                } catch (e) { }
-            }
-            return result
-        }
-    </script>
-    <script>
         const commandRef = document.querySelector("#command")
         const argumentsRef = document.querySelector("#arguments")
         const inputTableRef = document.querySelector("#input-table")
@@ -269,7 +229,8 @@
         let savedArgs = JSON.parse(localStorage.getItem("savedArgs") || '{}')
     </script>
     <script type="module" defer>
-        import * as modules from "./wasm.js";
+        import * as modules from "./js/wasm.js";
+        import { runWasm } from "./js/utils.js";
 
         let args = document.querySelector("#arguments")
         commandRef.replaceChildren(...Object.keys(modules).map(name => {
