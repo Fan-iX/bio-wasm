@@ -20,7 +20,7 @@ runs:
     - name: Build gawk
       shell: bash
       working-directory: gawk
-      run: make EXEEXT=.js CFLAGS="-O3" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]" gawk.js
+      run: make EXEEXT=.js CFLAGS="-O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"]" gawk.js
 
     - name: Make dist directory
       shell: bash

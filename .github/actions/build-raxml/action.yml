@@ -15,7 +15,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: standard-RAxML
-      run: make -f Makefile.gcc ARCH=aarch64 CC=emcc LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]"
+      run: make -f Makefile.gcc ARCH=aarch64 CC=emcc LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG"
 
     - name: Rename
       shell: bash

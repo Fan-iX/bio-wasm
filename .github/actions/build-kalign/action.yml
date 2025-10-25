@@ -10,7 +10,7 @@ runs:
     - name: Configure
       shell: bash
       working-directory: kalign
-      run: emcmake cmake -DCMAKE_EXE_LINKER_FLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]" .
+      run: emcmake cmake -DCMAKE_EXE_LINKER_FLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"]" .
 
     - name: Build
       shell: bash

@@ -15,7 +15,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: sed-4.9
-      run: make EXEEXT=.js sed/sed.js CFLAGS="-O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"]"
+      run: make EXEEXT=.js sed/sed.js CFLAGS="-O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"]"
 
     - name: Make dist directory
       shell: bash

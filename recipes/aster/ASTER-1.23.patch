@@ -6,8 +6,8 @@
 +
 +CXX=em++
 +CXXFLAGS=-std=c++17
-+LDFLAGS=-s MODULARIZE=1 -s EXPORT_ES6=1 -s EXPORTED_RUNTIME_METHODS='["callMain","FS"]' -O3
-+EXEEXT=.js
++LDFLAGS=
++EXEEXT=
 +
 +astral: dir
 +	$(CXX) $(CXXFLAGS) $(LDFLAGS) src/$@.cpp -o bin/$@$(EXEEXT)
