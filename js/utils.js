@@ -15,16 +15,16 @@ async function getUint8Array(x) {
  * @returns {Object} key-value pairs of output entries. `$stdout` and `$stderr` are reserved for standard output and error output.
  */
 export async function runWasm(wasmModule, { args = [], FS = {}, retFiles = [] } = {}) {
-    let stdout = [], stderr = [], stdin = [], _i = 0
+    let $stdout = [], $stderr = [], $stdin = [], _i = 0
     if (FS.$stdin) {
-        stdin = await getUint8Array(FS.$stdin)
+        $stdin = await getUint8Array(FS.$stdin)
         delete FS.$stdin
     }
     var wasm = await wasmModule({
         noInitialRun: true,
-        stdin: () => stdin[_i++],
-        stdout: (v) => stdout.push(v),
-        stderr: (v) => stderr.push(v),
+        stdin: () => $stdin[_i++],
+        stdout: (v) => $stdout.push(v),
+        stderr: (v) => $stderr.push(v),
     })
     for (let [path, file] of Object.entries(FS)) {
         if (path.startsWith("$")) continue
@@ -36,8 +36,8 @@ export async function runWasm(wasmModule, { args = [], FS = {}, retFiles = [] } 
     }
     await wasm.callMain(args)
     let result = {
-        $stdout: new Blob([new Uint8Array(stdout)]),
-        $stderr: new Blob([new Uint8Array(stderr)])
+        $stdout: new Blob([new Uint8Array($stdout)]),
+        $stderr: new Blob([new Uint8Array($stderr)])
     }
     for (let path of retFiles) {
         try {

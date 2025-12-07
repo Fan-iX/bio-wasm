@@ -1,14 +1,19 @@
-name: Deploy
+name: Publish
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  build:
-    name: Build
+  publish-npm:
+    name: Publish to NPM
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout repo
@@ -19,6 +24,12 @@ jobs:
 
       - name: Copy static files
         run: cp -r ./package.json ./js -t ./dist/
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: 24
 
       - name: Setup emscripten
         uses: mymindstorm/setup-emsdk@v12
@@ -66,35 +77,6 @@ jobs:
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from '../wasm/\"\$0\".js';\" }" > ../js/wasm.js
 
-      - name: Upload bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: bio-wasm
-          path: ./dist
-
-  deploy:
-    name: Deploy
-    needs: build
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Download bundle
-        uses: actions/download-artifact@v4
-        with:
-          name: bio-wasm
-          path: ./dist
-
-      - name: Copy static files
-        run: cp ./demo/index.html -t ./dist/
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      - name: Publish package to npm
+        working-directory: dist
+        run: npm publish --provenance

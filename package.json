@@ -1,6 +1,6 @@
 {
   "name": "bio-wasm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "files": [
     "wasm",
@@ -10,5 +10,10 @@
   "exports": {
     "./utils": "./js/utils.js",
     "./wasm": "./js/wasm.js"
+  },
+  "homepage": "https://fan-ix.github.io/bio-wasm/",
+  "repository": "https://github.com/Fan-iX/bio-wasm/",
+  "publishConfig": {
+    "access": "public"
   }
 }
