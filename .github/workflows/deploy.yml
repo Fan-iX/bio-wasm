@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - pages
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/pages'
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        shell: bash
+        run: |
+          git config user.name "Github Pages Overwriter"
+          git config user.email "GithubPagesOverwriter@users.noreply.github.com"
+
+          date > dist/publish_date.txt
+          git add --force dist
+          git commit -m "Automated publish"
+
+      - name: Deploy to GitHub Pages
+        shell: bash
+        run: git push -f origin `git subtree split -P dist`:refs/heads/gh-pages
