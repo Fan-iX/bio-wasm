@@ -12,7 +12,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: gffread
-      run: make CC=em++ CXX=em++ LINKER=em++ LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" release
+      run: make CC=em++ CXX=em++ LINKER=em++ LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" release
 
     - name: Rename
       shell: bash

@@ -20,7 +20,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: clustalw-2.1/src
-      run: make EXEEXT=.js clustalw2.js CXXFLAGS="-std=c++98 -O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"]"
+      run: make EXEEXT=.js clustalw2.js CXXFLAGS="-std=c++98 -O3 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"]"
 
     - name: Make dist directory
       shell: bash

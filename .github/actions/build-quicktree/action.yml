@@ -10,7 +10,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: quicktree
-      run: make CC=emcc LFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG"
+      run: make CC=emcc LFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG"
 
     - name: Rename
       shell: bash

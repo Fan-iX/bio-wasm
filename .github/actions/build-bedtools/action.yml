@@ -15,7 +15,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: bedtools2
-      run: make CXX="em++ -s USE_ZLIB" CC="emcc -s USE_ZLIB -s USE_BZIP2" BT_LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" bin/bedtools
+      run: make CXX="em++ -s USE_ZLIB" CC="emcc -s USE_ZLIB -s USE_BZIP2" BT_LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" bin/bedtools
 
     - name: Rename
       shell: bash

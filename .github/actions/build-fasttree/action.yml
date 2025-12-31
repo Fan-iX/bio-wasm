@@ -10,7 +10,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: fasttree
-      run: emcc -s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG -o FastTree.js FastTree.c -lm
+      run: emcc -s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG -o FastTree.js FastTree.c -lm
 
     - name: Make dist directory
       shell: bash

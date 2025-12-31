@@ -10,7 +10,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: seqtk
-      run: make CC=emcc CFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -s USE_ZLIB=1 -O3 -DNDEBUG"
+      run: make CC=emcc CFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -s USE_ZLIB=1 -O3 -DNDEBUG"
 
     - name: Rename
       shell: bash
