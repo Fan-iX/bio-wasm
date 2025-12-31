@@ -2,16 +2,14 @@ name: Publish
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
 
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  publish-npm:
-    name: Publish to NPM
+  publish:
+    name: Publish Package
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -80,3 +78,14 @@ jobs:
       - name: Publish package to npm
         working-directory: dist
         run: npm publish --provenance
+
+      - name: Create github release
+        run: |
+          TAG=v$(node -p "require('./package.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag $TAG
+          git push origin $TAG
+          gh release create $TAG --repo="${{ github.repository }}" --title "$TAG" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
