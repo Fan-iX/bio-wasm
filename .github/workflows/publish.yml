@@ -23,6 +23,11 @@ jobs:
       - name: Copy static files
         run: cp -r ./package.json ./js -t ./dist/
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autopoint
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
@@ -34,6 +39,12 @@ jobs:
 
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Build sed
+        uses: ./.github/actions/build-sed
+
+      - name: Build gawk
+        uses: ./.github/actions/build-gawk
 
       - name: Build kalign
         uses: ./.github/actions/build-kalign
@@ -56,14 +67,8 @@ jobs:
       - name: Build bedtools
         uses: ./.github/actions/build-bedtools
 
-      - name: Build gawk
-        uses: ./.github/actions/build-gawk
-
       - name: Build gffread
         uses: ./.github/actions/build-gffread
-
-      - name: Build sed
-        uses: ./.github/actions/build-sed
 
       - name: Build quicktree
         uses: ./.github/actions/build-quicktree

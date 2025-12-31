@@ -9,12 +9,13 @@ runs:
 
     - name: Clone submodules
       shell: bash
+      working-directory: sed
       run: git clone --depth 1 https://github.com/mirror/gnulib
 
     - name: Bootstrap
       shell: bash
       working-directory: sed
-      run: ./bootstrap --gen
+      run: GNULIB_SRCDIR=gnulib ./bootstrap
 
     - name: Configure
       shell: bash
