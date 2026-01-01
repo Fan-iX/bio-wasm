@@ -1,0 +1,31 @@
+name: Build
+description: Build lastz
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone --depth 1 https://github.com/lastz/lastz
+
+    - name: Patch
+      shell: bash
+      working-directory: lastz
+      run: patch -p0 < ../recipes/lastz/lastz-1.04.53.patch
+
+    - name: Build
+      shell: bash
+      working-directory: lastz/src
+      run: make CC=emcc definedForAll="-s USE_ZLIB=1 -DNDEBUG" LDFLAGS="-s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" lastz
+
+    - name: Rename
+      shell: bash
+      working-directory: lastz/src
+      run: mv lastz lastz.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/lastz
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp lastz/src/lastz.js lastz/src/lastz.wasm -t dist/wasm/lastz/
