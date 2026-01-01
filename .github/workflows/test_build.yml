@@ -1,0 +1,39 @@
+name: Test build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    name: Test build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Create dist directory
+        run: mkdir ./dist
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autopoint
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: 24
+
+      - name: Setup emscripten
+        uses: mymindstorm/setup-emsdk@v12
+
+      - name: Setup cmake
+        uses: jwlawson/actions-setup-cmake@v2
+
+      - name: Build lastz
+        uses: ./.github/actions/build-lastz
