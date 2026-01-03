@@ -81,6 +81,15 @@ jobs:
       - name: Build lastz
         uses: ./.github/actions/build-lastz
 
+      - name: Build htslib
+        uses: ./.github/actions/build-htslib
+
+      - name: Build samtools
+        uses: ./.github/actions/build-samtools
+
+      - name: Build bcftools
+        uses: ./.github/actions/build-bcftools
+
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from '../wasm/\"\$0\".js';\" }" > ../js/wasm.js

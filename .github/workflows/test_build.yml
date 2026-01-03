@@ -35,5 +35,17 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Build lastz
-        uses: ./.github/actions/build-lastz
+      - name: Build htslib
+        uses: ./.github/actions/build-htslib
+
+      - name: Build samtools
+        uses: ./.github/actions/build-samtools
+
+      - name: Build bcftools
+        uses: ./.github/actions/build-bcftools
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-files
+          path: ./dist

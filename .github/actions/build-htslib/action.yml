@@ -1,0 +1,23 @@
+name: Build
+description: Build htslib
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone --depth 1 https://github.com/samtools/htslib --recursive
+
+    - name: Preconfigure
+      shell: bash
+      working-directory: htslib
+      run: autoreconf -i
+
+    - name: Configure
+      shell: bash
+      working-directory: htslib
+      run: CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1" emconfigure ./configure --host none --disable-lzma
+
+    - name: Build
+      shell: bash
+      working-directory: htslib
+      run: emmake make libhts.a CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1 -O3 -DNDEBUG"

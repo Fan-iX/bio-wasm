@@ -1,0 +1,36 @@
+name: Build
+description: Build samtools
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: git clone --depth 1 https://github.com/samtools/samtools
+
+    - name: Preconfigure
+      shell: bash
+      working-directory: samtools
+      run: autoreconf
+
+    - name: Configure
+      shell: bash
+      working-directory: samtools
+      run: CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1" emconfigure ./configure --host none --without-curses --with-htslib=../htslib
+
+    - name: Build
+      shell: bash
+      working-directory: samtools
+      run: emmake make samtools CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1 -O3 -DNDEBUG" LDFLAGS="-s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\\\"callMain\\\",\\\"FS\\\"] -s ENVIRONMENT=[\\\"web\\\"] -O3 -DNDEBUG"
+
+    - name: Rename
+      shell: bash
+      working-directory: samtools
+      run: mv samtools samtools.js
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/samtools
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: cp samtools/samtools.js samtools/samtools.wasm -t dist/wasm/samtools/
