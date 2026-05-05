@@ -13,10 +13,13 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create dist directory
         run: mkdir ./dist
+
+      - name: Copy static files
+        run: cp -r ./package.json ./js -t ./dist/
 
       - name: Install build dependencies
         run: |
@@ -35,17 +38,19 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Build htslib
-        uses: ./.github/actions/build-htslib
+      - name: Build aster
+        uses: ./.github/actions/build-aster
 
-      - name: Build samtools
-        uses: ./.github/actions/build-samtools
+      - name: Build wasm.js
+        working-directory: dist/wasm
+        run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from '../wasm/\"\$0\".js';\" }" > ../js/wasm.js
 
-      - name: Build bcftools
-        uses: ./.github/actions/build-bcftools
+      - name: Build manifest
+        run: python ../build_manifest.py wasm > manifest.json
+        working-directory: dist
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: production-files
           path: ./dist

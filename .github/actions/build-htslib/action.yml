@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Clone
       shell: bash
-      run: git clone --depth 1 https://github.com/samtools/htslib --recursive
+      run: git clone --depth 1 https://github.com/samtools/htslib --recursive --shallow-submodules
 
     - name: Preconfigure
       shell: bash

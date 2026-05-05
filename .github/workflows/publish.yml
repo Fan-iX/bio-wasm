@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create dist directory
         run: mkdir ./dist
@@ -93,6 +93,10 @@ jobs:
       - name: Build wasm.js
         working-directory: dist/wasm
         run: ls **/*.js | sed 's/.js//' | awk "{print \"export { default as '\"\$0\"' } from '../wasm/\"\$0\".js';\" }" > ../js/wasm.js
+
+      - name: Build manifest
+        run: python ../build_manifest.py wasm > manifest.json
+        working-directory: dist
 
       - name: Publish package to npm
         working-directory: dist
