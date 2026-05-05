@@ -14,7 +14,7 @@ jobs:
     if: github.ref == 'refs/heads/pages'
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Git
         shell: bash

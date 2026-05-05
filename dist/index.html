@@ -228,7 +228,19 @@
         }
         let savedArgs = JSON.parse(localStorage.getItem("savedArgs") || '{}')
     </script>
-    <script type="module" defer>
+    <script type="module">
+        if ('serviceWorker' in navigator) {
+            await navigator.serviceWorker.register("./sw.js")
+            let registration = await navigator.serviceWorker.ready
+            registration.active.postMessage("CHECK_UPDATE")
+            if (!navigator.serviceWorker.controller) {
+                await new Promise(resolve => {
+                    navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+                });
+            }
+        }
+    </script>
+    <script type="module">
         import * as modules from "https://cdn.jsdelivr.net/npm/bio-wasm@latest/js/wasm.js";
         import { runWasm } from "https://cdn.jsdelivr.net/npm/bio-wasm@latest/js/utils.js";
 
