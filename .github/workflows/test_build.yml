@@ -38,8 +38,8 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Build aster
-        uses: ./.github/actions/build-aster
+      - name: Build blast
+        uses: ./.github/actions/build-blast
 
       - name: Build wasm.js
         working-directory: dist/wasm

@@ -1,0 +1,41 @@
+name: Build
+description: Build ncbi-blast
+runs:
+  using: "composite"
+  steps:
+    - name: Clone
+      shell: bash
+      run: wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.17.0+-src.tar.gz -O - | tar xz
+
+    - name: Patch
+      shell: bash
+      working-directory: ncbi-blast-2.17.0+-src
+      run: patch -p0 < ../recipes/blast/blast-2.17.0.patch
+
+    - name: Configure and build native datatools
+      shell: bash
+      working-directory: ncbi-blast-2.17.0+-src/c++
+      run: ./configure --with-projects=scripts/projects/datatool/project.lst --with-build-root=native && make -j$(nproc) -C native/build all_p
+
+    - name: Configure with emscripten
+      shell: bash
+      working-directory: ncbi-blast-2.17.0+-src/c++
+      run: emconfigure ./configure --host=wasm32-unknown-none AR="emar cr" CFLAGS="-s USE_SQLITE3=1 -O3" CXXFLAGS="-fwasm-exceptions -s USE_SQLITE3=1 -O3" LDFLAGS="-fwasm-exceptions -s ALLOW_MEMORY_GROWTH=1 -s USE_SQLITE3=1 -O3" --with-build-root=wasm --without-debug --without-mt --without-openmp --with-static --without-dll --without-vdb --without-ngs --without-gnutls --without-gcrypt --without-ncbicrypt --without-curl --without-mysql --without-bdb --without-sybase --without-ftds --without-gui --without-opengl --without-z --without-bz2 --without-lzo --without-zstd --without-pcre --without-pcre2 --without-expat --without-libxml --without-libxslt --without-lmdb --without-boost --without-sablot --without-xerces --without-xalan --without-strip --with-projects=scripts/projects/blast/project.lst
+
+    - name: Build
+      shell: bash
+      working-directory: ncbi-blast-2.17.0+-src/c++
+      run: NCBI_DATATOOL_PATH="$(realpath native/bin)" make -j$(nproc) -C wasm/build LDFLAGS="-fwasm-exceptions -s USE_SQLITE3=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sSTACK_SIZE=1048576 -s EXIT_RUNTIME=1 -s EXPORT_ES6=1 -s MODULARIZE=1 -s ALLOW_MEMORY_GROWTH=1 -s EXPORTED_RUNTIME_METHODS=[\"callMain\",\"FS\"] -s ENVIRONMENT=[\"web\"] -O3 -DNDEBUG" all_p
+
+    - name: Make dist directory
+      shell: bash
+      run: mkdir -p dist/wasm/blast
+
+    - name: Copy artifacts to dist
+      shell: bash
+      run: |
+          shopt -s globstar nullglob
+          for f in ncbi-blast-2.17.0+-src/c++/wasm/build/app/**/*.wasm; do
+              cp ${f%.wasm} dist/wasm/blast/$(basename $f .wasm).js
+              cp $f dist/wasm/blast/
+          done
