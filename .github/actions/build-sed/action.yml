@@ -5,17 +5,7 @@ runs:
   steps:
     - name: Clone
       shell: bash
-      run: git clone --depth 1 https://github.com/mirror/sed
-
-    - name: Clone submodules
-      shell: bash
-      working-directory: sed
-      run: git clone --depth 1 https://github.com/mirror/gnulib
-
-    - name: Bootstrap
-      shell: bash
-      working-directory: sed
-      run: GNULIB_SRCDIR=gnulib ./bootstrap
+      run: mkdir -p sed && wget https://ftp.gnu.org/gnu/sed/sed-4.10.tar.gz -qO - | tar xvz --strip-components=1 -C sed
 
     - name: Configure
       shell: bash
