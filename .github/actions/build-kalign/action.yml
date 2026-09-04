@@ -15,7 +15,7 @@ runs:
     - name: Build
       shell: bash
       working-directory: kalign
-      run: make kalign-bin
+      run: make -j$(nproc) kalign-bin
 
     - name: Make dist directory
       shell: bash

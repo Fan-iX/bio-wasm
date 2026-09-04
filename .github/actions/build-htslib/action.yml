@@ -20,4 +20,4 @@ runs:
     - name: Build
       shell: bash
       working-directory: htslib
-      run: emmake make libhts.a CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1 -O3 -DNDEBUG"
+      run: emmake make -j$(nproc) libhts.a CFLAGS="-s USE_ZLIB=1 -s USE_BZIP2=1 -O3 -DNDEBUG"
