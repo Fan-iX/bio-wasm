@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-1:
-    name: Build set 1
+    name: Test build set 1
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -27,44 +27,8 @@ jobs:
       - name: Setup emscripten
         uses: emscripten-core/setup-emsdk@v15
 
-      - name: Build aster
-        uses: ./.github/actions/build-aster
-
-      - name: Build bedtools
-        uses: ./.github/actions/build-bedtools
-
       - name: Build clustalw
         uses: ./.github/actions/build-clustalw
-
-      - name: Build fasttree
-        uses: ./.github/actions/build-fasttree
-
-      - name: Build gffread
-        uses: ./.github/actions/build-gffread
-
-      - name: Build lastz
-        uses: ./.github/actions/build-lastz
-
-      - name: Build quicktree
-        uses: ./.github/actions/build-quicktree
-
-      - name: Build raxml
-        uses: ./.github/actions/build-raxml
-
-      - name: Build seqtk
-        uses: ./.github/actions/build-seqtk
-
-      - name: Build vcftools
-        uses: ./.github/actions/build-vcftools
-
-      - name: Build htslib
-        uses: ./.github/actions/build-htslib
-
-      - name: Build samtools
-        uses: ./.github/actions/build-samtools
-
-      - name: Build bcftools
-        uses: ./.github/actions/build-bcftools
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -73,45 +37,7 @@ jobs:
           path: ./dist
 
   build-2:
-    name: Build set 2
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-
-      - name: Create dist directory
-        run: mkdir ./dist
-
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y autopoint
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          registry-url: 'https://registry.npmjs.org'
-          node-version: 24
-
-      - name: Setup emscripten
-        uses: emscripten-core/setup-emsdk@v15
-
-      - name: Build sed
-        uses: ./.github/actions/build-sed
-
-      - name: Build gawk
-        uses: ./.github/actions/build-gawk
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: build-set-2
-          path: ./dist
-
-  build-3:
-    name: Build set 3
+    name: Test build set 2
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -140,11 +66,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: build-set-3
+          name: build-set-2
           path: ./dist
 
   publish:
-    needs: [build-1, build-2, build-3]
+    needs: [build-1, build-2]
     name: Test publish
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
