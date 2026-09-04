@@ -9,8 +9,8 @@ runs:
 
     - name: Patch
       shell: bash
-      working-directory: ncbi-blast-2.17.0+-src
-      run: patch -p0 < ../recipes/blast/blast-2.17.0.patch
+      working-directory: ncbi-blast-2.17.0+-src/c++
+      run: patch -p0 < ../../recipes/blast/blast-2.17.0.patch
 
     - name: Configure and build native datatools
       shell: bash
