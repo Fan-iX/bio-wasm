@@ -7,11 +7,6 @@ runs:
       shell: bash
       run: git clone --depth 1 https://github.com/lastz/lastz
 
-    - name: Patch
-      shell: bash
-      working-directory: lastz
-      run: patch -p0 < ../recipes/lastz/lastz-1.04.53.patch
-
     - name: Build
       shell: bash
       working-directory: lastz/src
