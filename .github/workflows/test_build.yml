@@ -48,8 +48,8 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v2
 
-      - name: Build kalign
-        uses: ./.github/actions/build-kalign
+      - name: Build blast
+        uses: ./.github/actions/build-blast
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
