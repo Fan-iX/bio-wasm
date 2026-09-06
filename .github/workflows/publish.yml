@@ -185,14 +185,3 @@ jobs:
       - name: Publish package to npm
         working-directory: dist
         run: npm publish --provenance
-
-      - name: Create github release
-        run: |
-          TAG=v$(node -p "require('./package.json').version")
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag $TAG
-          git push origin $TAG
-          gh release create $TAG --title $TAG --generate-notes --repo $GITHUB_REPOSITORY
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
