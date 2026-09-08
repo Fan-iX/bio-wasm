@@ -37,6 +37,33 @@
             resize: vertical;
         }
 
+        #input-table,
+        #output-table {
+            caption {
+                font-size: larger;
+            }
+
+            input[type=text] {
+                width: 200px;
+                box-sizing: border-box;
+            }
+
+            textarea {
+                width: 100%;
+                height: 4lh;
+                box-sizing: border-box;
+            }
+
+            input[type=file] {
+                width: 100px;
+
+                &::file-selector-button {
+                    display: none;
+                }
+            }
+        }
+    </style>
+    <style>
         .flex {
             display: flex;
         }
@@ -77,30 +104,8 @@
             text-align: center;
         }
 
-        #input-table,
-        #output-table {
-            caption {
-                font-size: larger;
-            }
-
-            input[type=text] {
-                width: 200px;
-                box-sizing: border-box;
-            }
-
-            textarea {
-                width: 100%;
-                height: 4lh;
-                box-sizing: border-box;
-            }
-
-            input[type=file] {
-                width: 100px;
-
-                &::file-selector-button {
-                    display: none;
-                }
-            }
+        .whitespace-nowrap {
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -130,7 +135,7 @@
         and press <kbd>Backspace</kbd> on an empty argument input to remove it.
     </p>
     <div class="flex gap-4 items-start">
-        <table id="input-table" class="w-full">
+        <table id="input-table" class="w-full whitespace-nowrap">
             <caption><strong>input files</strong></caption>
             <thead>
                 <tr>
@@ -151,7 +156,7 @@
                     <td><input type="file" name="" id=""></td>
                 </tr>
             </tbody>
-            <tbody id="input-table-body"></tbody>
+            <tbody id="input-list"></tbody>
             <tfoot>
                 <tr>
                     <td colspan="5" class="text-center">
@@ -160,7 +165,7 @@
                 </tr>
             </tfoot>
         </table>
-        <table id="output-table" class="w-full">
+        <table id="output-table" class="w-full whitespace-nowrap">
             <caption><strong>output</strong></caption>
             <thead>
                 <tr>
@@ -179,7 +184,8 @@
                     <td><textarea name="" id=""></textarea></td>
                 </tr>
             </tbody>
-            <tbody id="output-table-body"></tbody>
+            <tbody id="output-list"></tbody>
+            <tbody id="output-list-extra"></tbody>
             <tfoot>
                 <tr>
                     <td colspan="3" class="text-center">
@@ -205,14 +211,23 @@
             }
             return ele
         }
+        function isText(ab) {
+            try {
+                let text = new TextDecoder('utf-8', { fatal: true }).decode(ab)
+                if (!text.includes('\x00')) return true
+            } catch { }
+            return false
+        }
     </script>
     <script>
         const commandRef = document.querySelector("#command")
         const argumentsRef = document.querySelector("#arguments")
         const inputTableRef = document.querySelector("#input-table")
-        const inputTableBodyRef = document.querySelector("#input-table-body")
+        const inputListRef = document.querySelector("#input-list")
         const outputTableRef = document.querySelector("#output-table")
-        const outputTableBodyRef = document.querySelector("#output-table-body")
+        const outputListRef = document.querySelector("#output-list")
+        const outputListExtraRef = document.querySelector("#output-list-extra")
+        const runButtonRef = document.querySelector("#runButton")
     </script>
     <script>
         function setArguments(cmd) {
@@ -240,9 +255,75 @@
             }
         }
     </script>
+    <script>
+        async function getUint8Array(x) {
+            if (x == null) return new Uint8Array(0)
+            if (x instanceof Blob) return new Uint8Array(await x.arrayBuffer())
+            if (typeof x === "string") return new TextEncoder().encode(x)
+            return new Uint8Array(x)
+        }
+
+        /**
+         * run an emscripten wasm module with given argument and filesystem entries
+         * @param {*} wasmModule the wasm module factory function
+         * @param {Object} options
+         * @param {String[]} options.args command line arguments
+         * @param {Object} options.FS key-value pairs of file path and file content (Blob/File/String/Uint8Array). `$stdin` is reserved for standard input. Relative paths will be placed under the working directory ("/run").
+         * @param {String[]} options.retFiles list of file paths to return after execution. Files under the working directory ("/run") will be auto automatically returned.
+         * @returns {{ [path: string]: Uint8Array }} key-value pairs of output entries. `$stdout` and `$stderr` are reserved for standard output and error output.
+         */
+        async function runWasm(wasmModule, { args = [], FS = {}, retFiles = [] } = {}) {
+            let $stdout = [], $stderr = [], $stdin = [], _i = 0
+            if (FS.$stdin) {
+                $stdin = await getUint8Array(FS.$stdin)
+                delete FS.$stdin
+            }
+            var wasm = await wasmModule({
+                noInitialRun: true,
+                stdin: () => $stdin[_i++],
+                stdout: (v) => $stdout.push(v),
+                stderr: (v) => $stderr.push(v),
+            })
+            for (let [path, file] of Object.entries(FS)) {
+                if (path.startsWith("$")) continue
+                if (!path.startsWith("/")) path = "/run/" + path
+                let dir = path.replace(/[^\/]*$/, '')
+                wasm.FS.mkdirTree(dir)
+                let name = path.replace(/^.*\//, '')
+                if (name == "") continue
+                wasm.FS.createDataFile(dir, name, await getUint8Array(file), true, true)
+            }
+            wasm.FS.chdir("/run")
+            let mtime = +new Date()
+            await wasm.callMain(args)
+            window.FS = wasm.FS
+            let result = {
+                $stdout: new Uint8Array($stdout),
+                $stderr: new Uint8Array($stderr),
+            }
+            const stack = [wasm.FS.lookupPath("/run").node], fileNodes = []
+            while (stack.length) {
+                const node = stack.pop()
+                if (wasm.FS.isLink(node.mode)) continue
+                if (wasm.FS.isFile(node.mode)) {
+                    let data = new Uint8Array(node.contents)
+                    data.modified = node.mtime > mtime
+                    result[wasm.FS.getPath(node).slice(5)] = data
+                } else if (wasm.FS.isDir(node.mode)) {
+                    for (const k in node.contents) stack.push(node.contents[k])
+                }
+            }
+            for (let path of retFiles) {
+                if (!path.startsWith("/")) continue
+                try {
+                    result[path] = new Uint8Array(wasm.FS.readFile(path))
+                } catch (e) { }
+            }
+            return result
+        }
+    </script>
     <script type="module">
-        import * as modules from "https://cdn.jsdelivr.net/npm/bio-wasm@latest/js/wasm.js";
-        import { runWasm } from "https://cdn.jsdelivr.net/npm/bio-wasm@latest/js/utils.js";
+        import * as modules from "https://cdn.jsdelivr.net/npm/bio-wasm@latest/js/wasm.js"
 
         let args = document.querySelector("#arguments")
         commandRef.replaceChildren(...Object.keys(modules).map(name => {
@@ -254,7 +335,7 @@
         commandRef.value = localStorage.getItem("lastCommand") ?? commandRef.value
         setArguments(commandRef.value)
 
-        document.querySelector("#runButton").onclick = async () => {
+        runButtonRef.onclick = async () => {
             let args = Array.from(document.querySelectorAll("#arguments .argument")).map(x => x.value)
             let FS = {}
             for (let tr of inputTableRef.querySelectorAll("tbody tr")) {
@@ -268,11 +349,23 @@
                     FS[path] = tr.querySelector("textarea").value
                 }
             }
-            let retFiles = Array.from(outputTableBodyRef.querySelectorAll("tr .path")).map(x => x.value)
+            let retFiles = Array.from(outputListRef.querySelectorAll("tr .path")).map(x => x.value)
             let output = await runWasm(modules[commandRef.value], { args, FS, retFiles })
             for (let tr of outputTableRef.querySelectorAll("tbody tr")) {
                 let path = tr.querySelector(".path").value
-                tr.querySelector("textarea").value = await output[path]?.text?.() || ""
+                tr.contentBuffer = output[path]
+                tr.querySelector("textarea").value = new TextDecoder().decode(output[path])
+                tr.querySelector("textarea").disabled = !isText(output[path])
+            }
+            outputListExtraRef.replaceChildren()
+            for (let path in output) {
+                if (path.startsWith("$") || retFiles.includes(path)) continue
+                if (path in FS && !output[path].modified) continue
+                let tr = createOutputRowExtra(path, output[path])
+                outputListExtraRef.appendChild(tr)
+                tr.contentBuffer = output[path]
+                tr.querySelector("textarea").value = new TextDecoder().decode(output[path])
+                tr.querySelector("textarea").disabled = !isText(output[path])
             }
         }
     </script>
@@ -300,10 +393,14 @@
                 saveArguments()
             }
             if (e.key === "Enter") {
-                let input = createArgument()
-                ele.after(input)
-                input.focus()
-                saveArguments()
+                if (e.ctrlKey) {
+                    runButtonRef.click()
+                } else {
+                    let input = createArgument()
+                    ele.after(input)
+                    input.focus()
+                    saveArguments()
+                }
             }
         }
         function addArgument(value) {
@@ -315,16 +412,25 @@
         }
         function saveInputFiles() {
             localStorage.setItem("inputFiles", JSON.stringify(
-                Array.from(inputTableBodyRef.querySelectorAll("tr")).map(tr => {
+                Array.from(inputListRef.querySelectorAll("tr")).map(tr => {
                     let path = tr.querySelector(".path").value
-                    let content = tr.querySelector("textarea").value
+                    let content = tr.querySelector("textarea").disabled ? undefined : tr.querySelector("textarea").value
+                    let base64 = tr.contentBuffer?.toBase64?.()
                     let enabled = tr.querySelector("input[type=checkbox]").checked
-                    return { path, content, enabled }
+                    return { path, content, base64, enabled }
                 })
             ))
         }
-        function addInputRow({ path, content, enabled = true } = {}) {
+        function saveOutputFiles() {
+            localStorage.setItem("outputFiles", JSON.stringify(
+                Array.from(outputListRef.querySelectorAll("tr")).map(tr => tr.querySelector(".path").value)
+            ))
+        }
+        function createInputRow({ path, enabled = true } = {}) {
             let tr = document.createElement("tr")
+            let fileInput = createElement("input", { type: "file" })
+            let textarea = createElement("textarea", { onchange: (e) => saveInputFiles() })
+
             tr.replaceChildren(
                 createElement("td", {
                     className: "text-center",
@@ -344,13 +450,8 @@
                         onchange: (e) => saveInputFiles()
                     })]
                 }),
-                createElement("td", {
-                    children: [createElement("textarea", {
-                        value: content || "",
-                        onchange: (e) => saveInputFiles()
-                    })]
-                }),
-                createElement("td", { children: [createElement("input", { type: "file" })] }),
+                createElement("td", { children: [textarea] }),
+                createElement("td", { children: [fileInput] }),
                 createElement("td", {
                     className: "text-center",
                     children: [createElement("button", {
@@ -363,14 +464,35 @@
                     })]
                 })
             )
-            inputTableBodyRef.append(tr)
+            tr.setContent = function (text) {
+                textarea.value = text
+                textarea.disabled = false
+                tr.contentBuffer = undefined
+                fileInput.files = new DataTransfer().files
+            }
+            tr.setContentBuffer = function (buffer) {
+                let path = tr.querySelector(".path").value.replace(/^.*\//, '')
+                tr.contentBuffer = buffer
+                textarea.value = new TextDecoder().decode(buffer)
+                textarea.disabled = true
+                let dataTransfer = new DataTransfer()
+                dataTransfer.items.add(new File([buffer], path))
+                fileInput.files = dataTransfer.files
+            }
+            return tr
         }
-        function saveOutputFiles() {
-            localStorage.setItem("outputFiles", JSON.stringify(
-                Array.from(outputTableBodyRef.querySelectorAll("tr")).map(tr => tr.querySelector(".path").value)
-            ))
+        function addInputRow({ path, content, base64, enabled = true } = {}) {
+            let tr = createInputRow({ path, content, enabled })
+            if (base64) tr.setContentBuffer(Uint8Array.fromBase64(base64))
+            else if (content) tr.setContent(content)
+            inputListRef.append(tr)
         }
         function addOutputRow(path) {
+            let tr = createOutputRow(path)
+            outputListRef.appendChild(tr)
+            saveOutputFiles()
+        }
+        function createOutputRow(path) {
             let tr = document.createElement("tr")
             tr.replaceChildren(
                 createElement("td", {
@@ -385,17 +507,97 @@
                 createElement("td", { children: [createElement("textarea")] }),
                 createElement("td", {
                     className: "text-center",
-                    children: [createElement("button", {
-                        innerText: "×",
-                        onclick: (e) => {
-                            tr.remove()
-                            saveOutputFiles()
-                        }
-                    })]
+                    children: [
+                        createElement("button", {
+                            innerText: "<",
+                            title: "add this file to input files",
+                            onclick: (e) => {
+                                let path = tr.querySelector(".path").value
+                                let row = Array.from(inputListRef.querySelectorAll("tr")).find(x => x.querySelector(".path").value === path)
+                                if (!row) {
+                                    row = createInputRow({ path })
+                                    inputListRef.append(row)
+                                }
+                                if (tr.querySelector("textarea").disabled) {
+                                    row.setContentBuffer(tr.contentBuffer)
+                                } else {
+                                    row.setContent(tr.querySelector("textarea").value)
+                                }
+                                saveInputFiles()
+                            }
+                        }),
+                        createElement("button", {
+                            innerText: "↓",
+                            title: "download this file",
+                            onclick: (e) => {
+                                let blob = new Blob([tr.contentBuffer], { type: "application/octet-stream" })
+                                let a = document.createElement("a")
+                                a.href = URL.createObjectURL(blob)
+                                a.download = tr.querySelector(".path").value.replace(/^.*\//, '')
+                                a.click()
+                            }
+                        }),
+                        createElement("button", {
+                            innerText: "×",
+                            title: "remove this file",
+                            onclick: (e) => {
+                                tr.remove()
+                                saveOutputFiles()
+                            }
+                        })
+                    ]
                 })
             )
-            outputTableBodyRef.appendChild(tr)
-            saveOutputFiles()
+            return tr
+        }
+        function createOutputRowExtra(path) {
+            let tr = document.createElement("tr")
+            tr.replaceChildren(
+                createElement("td", {
+                    children: [createElement("input", {
+                        type: "text",
+                        className: "font-mono path",
+                        value: path,
+                        disabled: true,
+                    })]
+                }),
+                createElement("td", { children: [createElement("textarea")] }),
+                createElement("td", {
+                    className: "text-center",
+                    children: [
+                        createElement("button", {
+                            innerText: "<",
+                            title: "add this file to input files",
+                            onclick: (e) => {
+                                let path = tr.querySelector(".path").value
+                                let row = Array.from(inputListRef.querySelectorAll("tr")).find(x => x.querySelector(".path").value === path)
+                                if (!row) {
+                                    row = createInputRow({ path })
+                                    inputListRef.append(row)
+                                }
+                                if (tr.querySelector("textarea").disabled) {
+                                    row.setContentBuffer(tr.contentBuffer)
+                                } else {
+                                    row.setContent(tr.querySelector("textarea").value)
+                                }
+                                saveInputFiles()
+                            }
+                        }),
+                        createElement("button", {
+                            innerText: "↓",
+                            title: "download this file",
+                            onclick: (e) => {
+                                let blob = new Blob([tr.contentBuffer], { type: "application/octet-stream" })
+                                let a = document.createElement("a")
+                                a.href = URL.createObjectURL(blob)
+                                a.download = tr.querySelector(".path").value.replace(/^.*\//, '')
+                                a.click()
+                            }
+                        })
+                    ]
+                })
+            )
+            return tr
         }
     </script>
     <script>
